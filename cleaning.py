@@ -38,7 +38,7 @@ def clean_country(x):
     except:
         pass
 
-##Not actually useful to coerce to a format - no easy to distinguish between centuries 
+##Not actually useful to coerce to a format - no easy way to distinguish between centuries 
 ##based on available HAS date input since it was a two-digit year format (dd-MonthAbrev-YY)
 # def clean_dob(x):
 #     """x is the DOB series"""
