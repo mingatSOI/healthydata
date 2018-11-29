@@ -2,7 +2,6 @@ import pandas as pd
 from fuzzywuzzy import process
 import os
 
-
 #Apply to surname and firstname 
 def clean_names(x):
     try:
@@ -58,14 +57,50 @@ for file in cc_filelist:
     cc_set.update(cc_country)
 
 #Run cleaning functions 
-path2 = '/mnt/c/Linux/healthydata/data/CSV files'
+path2 = '/mnt/c/Linux/healthydata/data'
 file_list = os.listdir(path2)
 
-for file_name in file_list:
-    data = pd.read_csv('/mnt/c/Linux/healthydata/data/CSV files/'+file_name, encoding = 'latin1')
-    data['Athlete_Name_clean'] = data['Athlete_Name'].apply(clean_names)
+#Set acceptable values to pass as string instead of null
+#Default values are:
+na_default = ['', '#N/A', '#N/A N/A', '#NA', '-1.#IND', '-1.#QNAN', '-NaN', '-nan', '1.#IND', '1.#QNAN', 'N/A', 'NA', 'NULL', 'NaN', 'n/a', 'nan', 'null']
+
+na_names = ['', '#N/A', '#N/A N/A', '#NA', '-1.#IND', '-1.#QNAN', '-NaN', '-nan', '1.#IND', '1.#QNAN', 'N/A', 'n/a']
+
+#Create rules for cleaning columns up front regarding null values
+disciplines = ['HH', 'OE', 'FF', 'SS', 'HP', 'FUNF']
+
+def create_dicts(dis, file_name):
+    df = pd.read_csv('/mnt/c/Linux/healthydata/data/CSV files/' + file_name, encoding='latin1', nrows=1)
+    cols = list(df.columns)
+    dis = dict()
+    for i in cols:
+        if i == 'Athlete_Name' or i == 'Athlete_First_Name':
+            dis[i] = na_names
+        else:
+            dis[i] = na_default
+    return dis
+
+hh = create_dicts('hh', 'HH_2007-2018.csv')
+ss = create_dicts('ss', 'SS_2007-2018.csv')
+oe = create_dicts('oe', 'OE_2007-2018.csv')
+hp = create_dicts('hp', 'HP_2007-2018.csv')
+funf = create_dicts('funf', 'FUNF_2007-2018.csv')
+ff = create_dicts('ff', 'FF_2007-2018.csv')
+
+#Clean it all!
+
+def main_clean(dis, file_name, output):
+    data = pd.read_excel('/mnt/c/Linux/healthydata/data/'+file_name, encoding = 'utf8', keep_na = False, na_values = dis)
+    data['Athlete_Name_Clean'] = data['Athlete_Name'].apply(clean_names)
     data['Athlete_First_Name_Clean'] = data['Athlete_First_Name'].apply(clean_names)
     #data['Athlete_DOB_Clean'] = data['Athlete_Date_Of_Birth'].apply(clean_dob)
     data['Country_clean'] = data['Country'].apply(clean_country)
-    data.to_csv('/mnt/c/Linux/healthydata/data/clean_csv/'+file_name)
+    data.to_csv('/mnt/c/Linux/healthydata/data/clean_csv/'+output, index=False)
     print(f"{file_name} is done")
+
+main_clean(hh, 'HH_2007-2018.xlsx', 'HH_2007-2018.csv')
+main_clean(ss, 'SS_2007-2018.xlsx', 'SS_2007-2018.csv')
+main_clean(oe, 'OE_2007-2018.xlsx', 'OE_2007-2018.csv')
+main_clean(hp, 'HP_2007-2018.xlsx', 'HP_2007-2018.csv')
+main_clean(funf, 'FUNF_2007-2018.xlsx', 'FUNF_2007-2018.csv')
+main_clean(ff, 'FF_2007-2018.xlsx', 'FF_2007-2018.csv')
